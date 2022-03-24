@@ -1,8 +1,3 @@
 starlette_exporter
 fastapi
 uvicorn[standard]
-# pytest
-# pytest-cov
-# requests
-# black
-# direnv
