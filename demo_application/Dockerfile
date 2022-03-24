@@ -1,35 +1,26 @@
 # syntax=docker/dockerfile:1
-FROM --platform=linux/amd64 python:slim
+
+ARG PYTHON_VERSION=3.9
+
+FROM --platform=linux/amd64 python:${PYTHON_VERSION}-slim AS build-env
 COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
-ARG APP_WORKDIR=/app
+COPY ./requirements.txt /app/requirements.txt
+WORKDIR /app
 
-ARG APP_USER_NAME=demo_application
-ARG APP_USER_UID=1234
+RUN pip3 install --upgrade pip
+RUN pip install -r ./requirements.txt
+COPY ./app.py /app/app.py
+RUN chmod 660 /app/app.py
 
-ARG APP_GROUP_NAME=${APP_USER_NAME}
-ARG APP_GROUP_GID=1234
 
-RUN addgroup \
-      --gid ${APP_GROUP_GID} \
-      ${APP_GROUP_NAME} && \
-    adduser \
-      --ingroup ${APP_GROUP_NAME} \
-      --no-create-home \
-      --disabled-password \
-      --uid ${APP_USER_UID} \
-      ${APP_USER_NAME}
+FROM --platform=linux/amd64 gcr.io/distroless/python3:nonroot
+ARG PYTHON_VERSION=3.9
 
-RUN mkdir -p ${APP_WORKDIR}
+COPY --from=build-env --chown=65532:65532 /app /app
+COPY --from=build-env --chown=65532:65532 /usr/local/lib/python${PYTHON_VERSION}/site-packages /usr/local/lib/python${PYTHON_VERSION}/site-packages
 
-WORKDIR ${APP_WORKDIR}
-
-COPY ./requirements.txt ${APP_WORKDIR}/requirements.txt
-
-RUN pip install --no-cache-dir --upgrade -r ${APP_WORKDIR}/requirements.txt
-
-COPY ./app.py ${APP_WORKDIR}
-
-RUN chown -R ${APP_USER_NAME}:${APP_GROUP_NAME} ${APP_WORKDIR}
-
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"]
+ENV PYTHONPATH=/usr/local/lib/python3.9/site-packages
+WORKDIR /app
+ENV APP /app
+CMD ["app.py"]
