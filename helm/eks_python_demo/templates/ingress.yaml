@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: {{ include "eks_python_demo.namespace" . }}
+  name: {{ include "eks_python_demo.name" . }}
+  labels:
+    {{- include "eks_python_demo.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.ingress.annotations -}}
+    {{- toYaml .Values.ingress.annotations | nindent 4 -}}
+    {{ else }}
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    {{- end }}
+spec:
+  rules:
+    - http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ ((.Values.overrides).service).name | default (printf "%s" (include "eks_python_demo.name" .)) }}
+              port:
+                name: http

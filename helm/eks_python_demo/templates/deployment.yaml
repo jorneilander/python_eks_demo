@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ include "eks_python_demo.namespace" . }}
+  name: {{ include "eks_python_demo.name" . }}
+  labels:
+    {{- include "eks_python_demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "eks_python_demo.selectorLabels" . | nindent 6 }}
+  replicas: {{ .Values.replicas | default 2 }}
+  template:
+    metadata:
+      labels:
+        {{- include "eks_python_demo.selectorLabels" . | nindent 8 }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                      - {{ include "eks_python_demo.name" . }}
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+      containers:
+        - image: {{ include "eks_python_demo.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "always"}}
+          name: {{ include "eks_python_demo.name" . }}
+          resources:
+            {{- if .Values.resources -}}
+            {{- toYaml .Values.resources | nindent 12 }}
+            {{ else }}
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            {{- end }}
+          ports:
+            - containerPort: {{ include "eks_python_demo.port" . }}
+          securityContext:
+            {{- if .Values.securityContext -}}
+            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{ else }}
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ include "eks_python_demo.port" . }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /
+              port: {{ include "eks_python_demo.port" . }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          env:
+            - name: "DEMO_API_RESPONSE"
+              value: {{ .Values.application.response.api | quote }}
+            - name: "DEMO_ROOT_RESPONSE"
+              value: {{ .Values.application.response.root | quote }}
+            - name: "APP_PORT"
+              value: {{ include "eks_python_demo.port" . | quote }}
+            - name: "APP_VERSION"
+              value: {{ .Values.application.version | quote }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}

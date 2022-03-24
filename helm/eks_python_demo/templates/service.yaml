@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ include "eks_python_demo.namespace" . }}
+  name: {{ include "eks_python_demo.name" . }}
+spec:
+  selector:
+    {{- include "eks_python_demo.selectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: {{ ((.Values.overrides).service).port | default 80 }}
+      targetPort: {{ include "eks_python_demo.port" . }}
+      name: http

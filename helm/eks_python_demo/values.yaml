@@ -1,0 +1,50 @@
+---
+application:
+  name: demo-application
+  port: 8080
+  version: 1
+  response:
+    root: "Welcome to ReaQta"
+    api: "Welcome to ReaQta API"
+
+replicas: ~
+
+image:
+  repository: ~
+  pullPolicy: Always
+  tag: ~
+
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+
+resources:
+  {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Simple application so we can re-use keys, but if someone really wants to...
+overrides:
+  namespace: ~
+  service:
+    name: ~
+    port: ~
