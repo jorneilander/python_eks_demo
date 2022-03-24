@@ -172,7 +172,7 @@ output "aws_auth_configmap_yaml" {
 }
 
 output "region" {
-  value = local.region
+  value = var.aws_region
 }
 
 output "fargate_aws_iam_role" {

@@ -1,14 +1,4 @@
-locals {
-  name            = "eks_python_demo"
-  cluster_version = "1.21"
-  region          = "eu-central-1"
 
-  tags = {
-    cluster    = local.name
-    GithubRepo = "python_eks_demo"
-    GithubOrg  = "jorneilander"
-  }
-}
 
 data "aws_availability_zones" "available" {}
 
@@ -27,13 +17,13 @@ module "vpc" {
 
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/${local.name}" = "shared"
-    "kubernetes.io/role/elb"              = 1
+    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                        = 1
   }
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/${local.name}" = "shared"
-    "kubernetes.io/role/internal-elb"     = 1
+    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"               = 1
   }
 
   tags = local.tags
